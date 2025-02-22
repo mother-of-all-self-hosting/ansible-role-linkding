@@ -89,7 +89,10 @@ linkding_container_labels_additional_labels: ""
 linkding_container_extra_arguments: []
 
 # List of systemd services that linkding.service depends on
-linkding_systemd_required_services_list: ["docker.service"]
+linkding_systemd_required_services_list: "{{ linkding_systemd_required_services_list_default + linkding_systemd_required_services_list_auto + linkding_systemd_required_services_list_custom }}"
+linkding_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+linkding_systemd_required_services_list_auto: []
+linkding_systemd_required_services_list_custom: []
 
 # Specifies the value of the `X-XSS-Protection` header
 # Stops pages from loading when they detect reflected cross-site scripting (XSS) attacks.
