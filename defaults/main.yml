@@ -43,7 +43,9 @@ linkding_container_network: "{{ linkding_identifier }}"
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
 # Use this to expose this container to another reverse proxy, which runs in a different container network.
-linkding_container_additional_networks: []
+linkding_container_additional_networks: "{{ linkding_container_additional_networks_auto + linkding_container_additional_networks_custom }}"
+linkding_container_additional_networks_auto: []
+linkding_container_additional_networks_custom: []
 
 # linkding_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
 # See `../templates/labels.j2` for details.
