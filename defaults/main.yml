@@ -32,12 +32,11 @@ linkding_scheme: https
 # The path at which linkding is served, must either be `/` or not end with a slash (e.g. `/linkding`)
 linkding_path_prefix: /
 
-linkding_container_image: "{{ linkding_container_image_registry_prefix }}{{ linkding_container_image_path }}:{{ linkding_container_image_tag }}"
+linkding_container_image: "{{ linkding_container_image_registry_prefix }}sissbruecker/linkding:{{ linkding_container_image_tag }}"
+linkding_container_image_tag: "{{ linkding_version }}"
 linkding_container_image_registry_prefix: "{{ linkding_container_image_registry_prefix_upstream }}"
 linkding_container_image_registry_prefix_upstream: "{{ linkding_container_image_registry_prefix_upstream_default }}"
 linkding_container_image_registry_prefix_upstream_default: docker.io/
-linkding_container_image_path: sissbruecker/linkding
-linkding_container_image_tag: "{{ linkding_version }}"
 linkding_container_image_force_pull: "{{ linkding_container_image.endswith(':latest') }}"
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
