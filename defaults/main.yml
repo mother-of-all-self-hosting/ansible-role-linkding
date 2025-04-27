@@ -13,7 +13,7 @@ linkding_enabled: true
 linkding_identifier: linkding
 
 # Base path for linkding resources
-linkding_base_path: "{{ linkding_identifier }}"
+linkding_base_path: "/{{ linkding_identifier }}"
 linkding_data_path: "{{ linkding_base_path }}/data"
 
 # Version of linkding to deploy
