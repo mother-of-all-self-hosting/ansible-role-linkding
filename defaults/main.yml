@@ -12,29 +12,25 @@ linkding_enabled: true
 # Identifier string for linkding resources (e.g. container names, network names)
 linkding_identifier: linkding
 
-# User ID and Group ID for running linkding service in the container
-linkding_uid: ""
-linkding_gid: ""
-
-# The scheme used for serving linkding (http or https)
-linkding_scheme: https
-
-# The hostname at which linkding is served
-linkding_hostname: ""
-
-# The path at which linkding is served, must either be `/` or not end with a slash (e.g. `/linkding`)
-linkding_path_prefix: /
-
-# Version of linkding to deploy
-linkding_version: 1.39.1
-
 # Base path for linkding resources
 linkding_base_path: "{{ linkding_identifier }}"
 linkding_data_path: "{{ linkding_base_path }}/data"
 
-# The username and password for the Linkding superuser
-linkding_superuser_username:
-linkding_superuser_password:
+# Version of linkding to deploy
+linkding_version: 1.39.1
+
+# User ID and Group ID for running linkding service in the container
+linkding_uid: ""
+linkding_gid: ""
+
+# The hostname at which linkding is served
+linkding_hostname: ""
+
+# The scheme used for serving linkding (http or https)
+linkding_scheme: https
+
+# The path at which linkding is served, must either be `/` or not end with a slash (e.g. `/linkding`)
+linkding_path_prefix: /
 
 linkding_container_image: "{{ linkding_container_image_registry_prefix }}{{ linkding_container_image_path }}:{{ linkding_container_image_tag }}"
 linkding_container_image_registry_prefix: "{{ linkding_container_image_registry_prefix_upstream }}"
@@ -95,12 +91,6 @@ linkding_container_labels_additional_labels: ""
 # A list of extra arguments to pass to the container
 linkding_container_extra_arguments: []
 
-# List of systemd services that linkding.service depends on
-linkding_systemd_required_services_list: "{{ linkding_systemd_required_services_list_default + linkding_systemd_required_services_list_auto + linkding_systemd_required_services_list_custom }}"
-linkding_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
-linkding_systemd_required_services_list_auto: []
-linkding_systemd_required_services_list_custom: []
-
 # Specifies the value of the `X-XSS-Protection` header
 # Stops pages from loading when they detect reflected cross-site scripting (XSS) attacks.
 #
@@ -151,6 +141,16 @@ linkding_floc_optout_enabled: true
 # - https://hstspreload.org/#opt-in
 # See: `linkding_http_header_strict_transport_security`
 linkding_hsts_preload_enabled: false
+
+# List of systemd services that linkding.service depends on
+linkding_systemd_required_services_list: "{{ linkding_systemd_required_services_list_default + linkding_systemd_required_services_list_auto + linkding_systemd_required_services_list_custom }}"
+linkding_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+linkding_systemd_required_services_list_auto: []
+linkding_systemd_required_services_list_custom: []
+
+# The username and password for the Linkding superuser
+linkding_superuser_username:
+linkding_superuser_password:
 
 # Database configuration, defaults to sqlite
 linkding_database_engine: sqlite
