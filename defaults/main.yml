@@ -1,5 +1,8 @@
-# SPDX-FileCopyrightText: 2023 kinduff
-# SPDX-FileCopyrightText: 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
+# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
+# SPDX-FileCopyrightText: 2025 MASH project contributors
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -29,7 +32,8 @@ linkding_hostname: ""
 # The scheme used for serving linkding (http or https)
 linkding_scheme: https
 
-# The path at which linkding is served, must either be `/` or not end with a slash (e.g. `/linkding`)
+# The path at which linkding is exposed.
+# This value must either be `/` or not end with a slash (e.g. `/linkding`).
 linkding_path_prefix: /
 
 linkding_container_image: "{{ linkding_container_image_registry_prefix }}sissbruecker/linkding:{{ linkding_container_image_tag }}"
