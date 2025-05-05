@@ -1,5 +1,6 @@
 {#
 SPDX-FileCopyrightText: 2023 kinduff
+SPDX-FileCopyrightText: 2025 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -26,12 +27,12 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
       --name={{ linkding_identifier }} \
       --log-driver=none \
+      --user={{ linkding_uid }}:{{ linkding_gid }} \
+      --cap-drop=ALL \
       --network={{ linkding_container_network }} \
       {% if linkding_container_http_host_bind_port %}
       -p {{ linkding_container_http_host_bind_port }}:{{ linkding_container_http_port }} \
       {% endif %}
-      --user={{ linkding_uid }}:{{ linkding_gid }} \
-      --cap-drop=ALL \
       --env-file={{ linkding_base_path }}/env \
       --label-file={{ linkding_base_path }}/labels \
       --mount type=bind,src={{ linkding_data_path }},dst=/etc/linkding/data \
