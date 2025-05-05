@@ -40,7 +40,7 @@ traefik.http.routers.{{ linkding_identifier }}.tls={{ linkding_container_labels_
 traefik.http.routers.{{ linkding_identifier }}.tls.certResolver={{ linkding_container_labels_traefik_tls_certResolver }}
 {% endif %}
 
-traefik.http.services.{{ linkding_identifier }}.loadbalancer.server.port=9090
+traefik.http.services.{{ linkding_identifier }}.loadbalancer.server.port={{ linkding_container_http_port }}
 {% endif %}
 
 {{ linkding_container_labels_additional_labels }}
