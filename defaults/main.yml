@@ -157,7 +157,7 @@ linkding_systemd_required_services_list_custom: []
 # List of systemd services that the linkding systemd service wants
 linkding_systemd_wanted_services_list: []
 
-# The username and password for the Linkding superuser
+# The username and password for the linkding superuser
 linkding_superuser_username:
 linkding_superuser_password:
 
