@@ -17,12 +17,12 @@
         enabled: false
         daemon_reload: true
 
-    - name: Ensure linkding systemd service does not exists
+    - name: Ensure linkding systemd service does not exist
       ansible.builtin.file:
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ linkding_identifier }}.service"
         state: absent
 
-    - name: Ensure linkding path doesn't exist
+    - name: Ensure linkding path does not exist
       ansible.builtin.file:
         path: "{{ linkding_base_path }}"
         state: absent
