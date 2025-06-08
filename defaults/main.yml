@@ -43,6 +43,12 @@ linkding_container_image_registry_prefix_upstream: "{{ linkding_container_image_
 linkding_container_image_registry_prefix_upstream_default: docker.io/
 linkding_container_image_force_pull: "{{ linkding_container_image.endswith(':latest') }}"
 
+linkding_container_image_self_build: false
+linkding_container_image_name: "sissbruecker/linkding:{{ linkding_container_image_tag }}"
+linkding_container_repo: "https://github.com/sissbruecker/linkding.git"
+linkding_container_repo_version: "{{ 'v' + linkding_version if linkding_version != 'latest' else 'master' }}"
+linkding_container_src_files_path: "{{ linkding_base_path }}/docker-src"
+
 # Controls whether the container exposes its HTTP port (tcp/9090 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:8731"), or empty string to not expose.
