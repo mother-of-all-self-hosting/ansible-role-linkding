@@ -57,21 +57,21 @@
   block:
     - name: Ensure linkding repository is present on self-build
       ansible.builtin.git:
-        repo: "{{ linkding_container_repo }}"
-        version: "{{ linkding_container_repo_version }}"
-        dest: "{{ linkding_container_src_files_path }}"
+        repo: "{{ linkding_container_image_self_build_repo }}"
+        version: "{{ linkding_container_image_self_build_repo_version }}"
+        dest: "{{ linkding_container_image_self_build_src_files_path }}"
         force: "yes"
       register: linkding_git_pull_results
 
     - name: Ensure linkding container image is built
       community.docker.docker_image:
-        name: "{{ linkding_container_image_name }}"
+        name: "{{ linkding_container_image_self_build_name }}"
         source: build
         force_source: "{{ linkding_git_pull_results.changed if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
         force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else linkding_git_pull_results.changed }}"
         build:
           dockerfile: docker/default.Dockerfile
-          path: "{{ linkding_container_src_files_path }}"
+          path: "{{ linkding_container_image_self_build_src_files_path }}"
           pull: true
           args:
 
