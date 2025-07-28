@@ -1,5 +1,6 @@
 {#
 SPDX-FileCopyrightText: 2023 kinduff
+SPDX-FileCopyrightText: 2023 Slavi Pantaleev
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -17,6 +18,11 @@ traefik.docker.network={{ linkding_container_labels_traefik_docker_network }}
 traefik.http.middlewares.{{ linkding_identifier }}-slashless-redirect.redirectregex.regex=({{ linkding_container_labels_traefik_path_prefix | quote }})$
 traefik.http.middlewares.{{ linkding_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
 {% set middlewares = middlewares + [linkding_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if linkding_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ linkding_identifier }}-strip-prefix.stripprefix.prefixes={{ linkding_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [linkding_identifier + '-strip-prefix'] %}
 {% endif %}
 
 {% if linkding_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
