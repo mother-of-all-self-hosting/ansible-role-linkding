@@ -16,74 +16,74 @@ SPDX-FileCopyrightText: 2024 - 2025 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Setting up OxiTraffic
+# Setting up linkding
 
-This is an [Ansible](https://www.ansible.com/) role which installs [OxiTraffic](https://codeberg.org/mo8it/oxitraffic) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [linkding](https://codeberg.org/mo8it/linkding) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-OxiTraffic is a self-hosted, simple and privacy respecting website traffic tracker. It does not collect IP addresses or browser information. Each visitor is assigned an anonymous ID upon visiting the website, which is used to store information on how long the visitor stays there, without setting cookies.
+linkding is a self-hosted, simple and privacy respecting website traffic tracker. It does not collect IP addresses or browser information. Each visitor is assigned an anonymous ID upon visiting the website, which is used to store information on how long the visitor stays there, without setting cookies.
 
-See the project's [documentation](https://codeberg.org/mo8it/oxitraffic/src/branch/main/README.md) to learn what OxiTraffic does and why it might be useful to you.
+See the project's [documentation](https://codeberg.org/mo8it/linkding/src/branch/main/README.md) to learn what linkding does and why it might be useful to you.
 
 ## Prerequisites
 
-To run a OxiTraffic instance it is necessary to prepare a [Postgres](https://www.postgresql.org) database server.
+To run a linkding instance it is necessary to prepare a [Postgres](https://www.postgresql.org) database server.
 
 If you are looking for an Ansible role for it, you can check out [this role (ansible-role-postgres)](https://github.com/mother-of-all-self-hosting/ansible-role-postgres) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
 ## Adjusting the playbook configuration
 
-To enable OxiTraffic with this role, add the following configuration to your `vars.yml` file.
+To enable linkding with this role, add the following configuration to your `vars.yml` file.
 
 **Note**: the path should be something like `inventory/host_vars/mash.example.com/vars.yml` if you use the [MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 ```yaml
 ########################################################################
 #                                                                      #
-# oxitraffic                                                           #
+# linkding                                                             #
 #                                                                      #
 ########################################################################
 
-oxitraffic_enabled: true
+linkding_enabled: true
 
 ########################################################################
 #                                                                      #
-# /oxitraffic                                                          #
+# /linkding                                                            #
 #                                                                      #
 ########################################################################
 ```
 
 ### Set the hostname
 
-To enable OxiTraffic you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable linkding you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
-oxitraffic_hostname: "example.com"
+linkding_hostname: "example.com"
 ```
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
-**Note**: hosting OxiTraffic under a subpath (by configuring the `oxitraffic_path_prefix` variable) does not seem to be possible due to OxiTraffic's technical limitations.
+**Note**: hosting linkding under a subpath (by configuring the `linkding_path_prefix` variable) does not seem to be possible due to linkding's technical limitations.
 
 ### Set variables for connecting to a Postgres database server
 
-To have the Miniflux instance connect to your Postgres server, add the following configuration to your `vars.yml` file.
+To have the linkding instance connect to your Postgres server, add the following configuration to your `vars.yml` file.
 
 ```yaml
-oxitraffic_database_username: YOUR_POSTGRES_SERVER_USERNAME_HERE
-oxitraffic_database_password: YOUR_POSTGRES_SERVER_PASSWORD_HERE
-oxitraffic_database_hostname: YOUR_POSTGRES_SERVER_HOSTNAME_HERE
-oxitraffic_database_port: 5432
-oxitraffic_database_name: YOUR_POSTGRES_SERVER_DATABASE_NAME_HERE
+linkding_database_username: YOUR_POSTGRES_SERVER_USERNAME_HERE
+linkding_database_password: YOUR_POSTGRES_SERVER_PASSWORD_HERE
+linkding_database_hostname: YOUR_POSTGRES_SERVER_HOSTNAME_HERE
+linkding_database_port: 5432
+linkding_database_name: YOUR_POSTGRES_SERVER_DATABASE_NAME_HERE
 ```
 
 Make sure to replace values for variables with yours.
 
 ### Set the website hostname
 
-You also need to set the hostname of the website, on which the OxiTraffic instance counts visits, as below:
+You also need to set the hostname of the website, on which the linkding instance counts visits, as below:
 
 ```yaml
-oxitraffic_tracked_origin: https://origin.example.com
+linkding_tracked_origin: https://origin.example.com
 ```
 
 Replace `https://origin.example.com` with the hostname of your website.
@@ -94,9 +94,9 @@ There are some additional things you may wish to configure about the component.
 
 Take a look at:
 
-- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `oxitraffic_environment_variables_additional_variables` variable
+- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `linkding_environment_variables_additional_variables` variable
 
-See the [documentation](https://codeberg.org/mo8it/oxitraffic#configuration) for a complete list of OxiTraffic's config options that you could put in `oxitraffic_environment_variables_additional_variables`.
+See the [documentation](https://codeberg.org/mo8it/linkding#configuration) for a complete list of linkding's config options that you could put in `linkding_environment_variables_additional_variables`.
 
 ## Installing
 
@@ -110,9 +110,9 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, the OxiTraffic instance becomes available at the URL specified with `oxitraffic_hostname`. With the configuration above, the service is hosted at `https://example.com`.
+After running the command for installation, the linkding instance becomes available at the URL specified with `linkding_hostname`. With the configuration above, the service is hosted at `https://example.com`.
 
-To have your OxiTraffic instance count visits at `https://origin.example.com`, you need to add the following script tag to the website:
+To have your linkding instance count visits at `https://origin.example.com`, you need to add the following script tag to the website:
 
 ```html
 <script type="module" src="https://example.com/count.js"></script>
@@ -122,4 +122,4 @@ To have your OxiTraffic instance count visits at `https://origin.example.com`, y
 
 ### Check the service's logs
 
-Internal OxiTraffic errors will not be logged to `stdout` and will therefore not be part of `journalctl -fu mash-oxitraffic`. Its log can be checked by running `tail -f logs/oxitraffic`.
+Internal linkding errors will not be logged to `stdout` and will therefore not be part of `journalctl -fu mash-linkding`. Its log can be checked by running `tail -f logs/linkding`.
