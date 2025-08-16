@@ -117,4 +117,4 @@ To get started, open the URL with a web browser, and log in with the superuser's
 
 ### Check the service's logs
 
-Internal linkding errors will not be logged to `stdout` and will therefore not be part of `journalctl -fu mash-linkding`. Its log can be checked by running `tail -f logs/linkding`.
+You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu linkding` (or how you/your playbook named the service, e.g. `mash-linkding`).
