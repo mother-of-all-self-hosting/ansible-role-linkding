@@ -12,6 +12,14 @@
   when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
     - { "old": "linkding_database_engine", "new": "linkding_database_type" }
+    - { "old": "linkding_environment_variable_database_engine", "new": "linkding_database_type" }
+    - { "old": "linkding_environment_variable_database_username", "new": "linkding_database_username" }
+    - { "old": "linkding_environment_variable_database_password", "new": "linkding_database_password" }
+    - { "old": "linkding_environment_variable_database_hostname", "new": "linkding_database_hostname" }
+    - { "old": "linkding_environment_variable_database_port", "new": "linkding_database_port" }
+    - { "old": "linkding_environment_variable_database_name", "new": "linkding_database_name" }
+    - { "old": "linkding_environment_variable_superuser_username", "new": "linkding_superuser_username" }
+    - { "old": "linkding_environment_variable_superuser_password", "new": "linkding_superuser_password" }
 
 - name: Fail if required linkding settings not defined
   ansible.builtin.fail:
