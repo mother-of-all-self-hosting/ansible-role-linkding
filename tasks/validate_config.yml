@@ -33,7 +33,6 @@
     - linkding_hostname
     - linkding_path_prefix
     - linkding_container_network
-    - linkding_database_hostname
     - linkding_database_password
 
 - name: Run if Traefik is enabled
