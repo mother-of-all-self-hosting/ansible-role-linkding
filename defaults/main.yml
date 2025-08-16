@@ -173,8 +173,10 @@ linkding_systemd_wanted_services_list: []
 linkding_superuser_username:
 linkding_superuser_password:
 
-# Database configuration, defaults to sqlite
+# Database configuration
+# Valid values: sqlite, postgres
 linkding_database_type: sqlite
+
 linkding_database_hostname: "localhost"
 linkding_database_username: linkding
 linkding_database_password:
