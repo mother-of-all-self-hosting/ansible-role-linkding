@@ -178,9 +178,9 @@ linkding_superuser_password:
 linkding_database_type: sqlite
 
 linkding_database_hostname: "localhost"
+linkding_database_port:
 linkding_database_username: linkding
 linkding_database_password:
-linkding_database_port:
 linkding_database_name: linkding
 
 # Controls the LD_CONTEXT_PATH environment variable
