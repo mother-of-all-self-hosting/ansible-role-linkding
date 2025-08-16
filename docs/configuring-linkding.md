@@ -68,6 +68,7 @@ After adjusting the hostname, make sure to adjust your DNS records to point the 
 To have the linkding instance connect to your Postgres server, add the following configuration to your `vars.yml` file.
 
 ```yaml
+linkding_database_type: postgres
 linkding_database_hostname: YOUR_POSTGRES_SERVER_HOSTNAME_HERE
 linkding_database_port: 5432
 linkding_database_username: YOUR_POSTGRES_SERVER_USERNAME_HERE
