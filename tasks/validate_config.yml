@@ -35,6 +35,20 @@
     - linkding_container_network
     - linkding_database_password
 
+- name: Fail if linkding database type invalid
+  ansible.builtin.fail:
+    msg: >-
+      linkding_database_type must be 'postgres' or 'sqlite'
+  when: "linkding_database_type not in ['postgres', 'sqlite']"
+
+- name: Fail if required linkding + Postgres integration settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`) when `linkding_database_type` is `postgres`
+  when: "linkding_database_type == 'postgres' and lookup('vars', item, default='') | string | length == 0"
+  with_items:
+    - linkding_database_password
+
 - name: Run if Traefik is enabled
   when: linkding_container_labels_traefik_enabled | bool
   block:
