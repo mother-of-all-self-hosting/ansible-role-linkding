@@ -177,7 +177,7 @@ linkding_superuser_username:
 linkding_superuser_password:
 
 # Database configuration
-# Valid values: sqlite, postgres
+# Valid values: postgres, sqlite
 linkding_database_type: sqlite
 
 linkding_database_hostname: "localhost"
