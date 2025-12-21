@@ -113,7 +113,7 @@ linkding_container_labels_additional_labels: "{{ linkding_container_labels_addit
 linkding_container_labels_additional_labels_auto: {}
 linkding_container_labels_additional_labels_custom: {}
 
-# A list of extra arguments to pass to the container
+# A list of extra arguments to pass to the container (`docker create` command)
 linkding_container_extra_arguments: "{{ linkding_container_extra_arguments_auto + linkding_container_extra_arguments_custom }}"
 linkding_container_extra_arguments_auto: []
 linkding_container_extra_arguments_custom: []
