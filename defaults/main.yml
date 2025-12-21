@@ -32,7 +32,7 @@ linkding_hostname: ""
 # The scheme used for serving linkding (http or https)
 linkding_scheme: https
 
-# The path at which linkding is exposed.
+# The path at which linkding is served.
 # This value must either be `/` or not end with a slash (e.g. `/linkding`).
 linkding_path_prefix: /
 
