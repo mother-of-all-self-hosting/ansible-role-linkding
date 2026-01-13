@@ -70,7 +70,7 @@ linkding_container_additional_networks_custom: []
 # linkding_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
 # See `../templates/labels.j2` for details.
 #
-# To inject your own other container labels, see `linkding_container_labels_additional_labels`.
+# To inject your own other container labels, see `linkding_container_labels_additional_labels_custom`.
 linkding_container_labels_traefik_enabled: true
 linkding_container_labels_traefik_docker_network: "{{ linkding_container_network }}"
 linkding_container_labels_traefik_hostname: "{{ linkding_hostname }}"
