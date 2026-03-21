@@ -214,14 +214,15 @@ linkding_container_cleanup_command: |
   echo "Failed to remove stale container {{ linkding_identifier }} after {{ linkding_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
-# Database configuration
+# Specify a database driver to use
 # Valid values: postgres, sqlite
 linkding_database_type: sqlite
 
-linkding_database_hostname: "localhost"
+# Specify database configuration
+linkding_database_hostname: ""
 linkding_database_port: 5432
 linkding_database_username: linkding
-linkding_database_password:
+linkding_database_password: ""
 linkding_database_name: linkding
 
 # The username and password for the linkding superuser

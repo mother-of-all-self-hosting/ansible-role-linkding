@@ -48,6 +48,7 @@
       You need to define a required configuration setting (`{{ item }}`) when `linkding_database_type` is `postgres`
   when: "linkding_database_type == 'postgres' and lookup('vars', item, default='') | string | length == 0"
   with_items:
+    - linkding_database_hostname
     - linkding_database_password
 
 - name: Run if Traefik is enabled
