@@ -1,8 +1,10 @@
-# SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
-# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023, 2024 Nikita Chernyi
+# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Julian-Samuel Gebühr
 # SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
+# SPDX-FileCopyrightText: 2024 noah
 # SPDX-FileCopyrightText: 2025 MASH project contributors
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -210,6 +212,12 @@ linkding_container_cleanup_command: |
   echo "Failed to remove stale container {{ linkding_identifier }} after {{ linkding_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
+########################################################################
+#                                                                      #
+# database                                                             #
+#                                                                      #
+########################################################################
+
 # Specify a database driver to use
 # Valid values: postgres, sqlite
 linkding_database_type: sqlite
@@ -220,6 +228,23 @@ linkding_database_port: 5432
 linkding_database_username: linkding
 linkding_database_password: ""
 linkding_database_name: linkding
+
+# Control if the database connection to Postgres is made via a Unix socket
+linkding_database_socket_enabled: true
+
+# Specify the path to the Postgres Unix socket path inside the linkding container
+linkding_database_socket_path_container: /run-postgres
+
+# Specify the path to the Postgres Unix socket path on the host (bind-mount source)
+linkding_database_socket_path_host: ""
+
+linkding_environment_variables_ld_db_host: "{{ linkding_database_socket_path_container if linkding_database_socket_enabled else linkding_database_hostname }}"
+
+########################################################################
+#                                                                      #
+# /database                                                            #
+#                                                                      #
+########################################################################
 
 # The username and password for the linkding superuser
 linkding_superuser_username:
