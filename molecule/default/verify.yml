@@ -23,6 +23,12 @@
         fail_msg: "linkding.service not active ({{ linkding_service.status.ActiveState }})"
         success_msg: "linkding.service is active"
 
+    - name: Retrieve linkding service log for debugging
+      when: linkding_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu linkding.service
+      changed_when: false
+
     - name: Wait for linkding HTTP endpoint to respond (up to 10m)
       ansible.builtin.uri:
         url: "http://localhost:9090/"
