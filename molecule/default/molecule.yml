@@ -33,7 +33,8 @@ provisioner:
         # Variables for linkding
         linkding_uid: 1000
         linkding_gid: 1000
-        linkding_hostname: linkding
+        linkding_scheme: http
+        linkding_hostname: localhost
         linkding_container_labels_traefik_enabled: false
         linkding_container_http_host_bind_port: 9090
         linkding_database_type: sqlite
