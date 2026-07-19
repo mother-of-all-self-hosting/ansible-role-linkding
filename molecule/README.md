@@ -49,6 +49,10 @@ Currently these testing scenarios are available:
 
 Tests a standard linkding installation.
 
+### `default-selfbuild`
+
+Tests a standard linkding installation with self-building the container image.
+
 ### `postgres`
 
 Tests a standard linkding installation with the Postgres database.
