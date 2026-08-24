@@ -260,21 +260,27 @@
           password: "{{ linkding_superuser_password }}"
         headers:
           Cookie: "{{ linkding_verify_cookies }}"
-        status_code: [200, 401, 403]
-        follow_redirects: all
+        status_code: [200, 302, 401, 403]
+        follow_redirects: none
       register: linkding_login
       no_log: true  # carries the superuser password in the request body
 
+    # Redirects are deliberately not followed. The uri module only reports
+    # cookies for a 2xx response, so the session cookie set alongside this 302
+    # is not visible here anyway, and following the redirect would re-send the
+    # static Cookie header above instead of the new session - landing back on
+    # the login page and making a successful login look like a failed one.
+    # What separates the two cases is the answer itself: linkding redirects an
+    # accepted login to /bookmarks and answers a rejected one with a 401.
     - name: Assert the superuser credentials authenticate
       ansible.builtin.assert:
         that:
-          - linkding_login.status == 200
-          - "'sessionid' in linkding_login.cookies"
-          - "'/bookmarks' in linkding_login.url"
+          - linkding_login.status == 302
+          - "'/bookmarks' in linkding_login.location"
         fail_msg: >-
           Logging in to linkding as '{{ linkding_superuser_username }}' failed
           (status {{ linkding_login.status | default('no response') }},
-          landed on {{ linkding_login.url | default('nowhere') }})
+          sent to {{ linkding_login.location | default('nowhere') }})
         success_msg: "The configured superuser credentials authenticate against linkding"
 
     # The control for the login above. Without it, a linkding that accepted any
@@ -290,8 +296,8 @@
           password: "not-the-{{ linkding_superuser_password }}"
         headers:
           Cookie: "{{ linkding_verify_cookies }}"
-        status_code: [200, 401, 403]
-        follow_redirects: all
+        status_code: [200, 302, 401, 403]
+        follow_redirects: none
       register: linkding_login_rejected
       no_log: true  # carries a variation of the superuser password
 
@@ -299,7 +305,7 @@
       ansible.builtin.assert:
         that:
           - linkding_login_rejected.status == 401
-          - "'sessionid' not in (linkding_login_rejected.cookies | default({}))"
+          - "'/bookmarks' not in (linkding_login_rejected.location | default(''))"
         fail_msg: >-
           linkding did not reject a wrong password
           (status {{ linkding_login_rejected.status | default('no response') }})
