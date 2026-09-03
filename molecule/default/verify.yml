@@ -131,10 +131,7 @@
           body {{ linkding_health.json | default('none') }})
         success_msg: "linkding reports a working database connection"
 
-    # Tying the running version to `linkding_version` is what makes this
-    # scenario a real test of the version that Renovate bumps: a bump that
-    # produces an unusable or mistagged image cannot pass here.
-    - name: Assert the running version is the one the role asks for
+    - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
         that: linkding_health.json.version == linkding_defaults.linkding_version | string
         fail_msg: >-
