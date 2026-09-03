@@ -130,13 +130,11 @@
           body {{ linkding_health.json | default('none') }})
         success_msg: "linkding reports a working database connection"
 
-    - name: Assert the running version is the one the role asks for
+    - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
         that: linkding_health.json.version == linkding_defaults.linkding_version | string
-        fail_msg: >-
-          linkding reports version {{ linkding_health.json.version | default('none') }},
-          but the role asks for {{ linkding_defaults.linkding_version }}
-        success_msg: "linkding reports version {{ linkding_health.json.version }}"
+        fail_msg: "linkding reports {{ linkding_health.json.version | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
+        success_msg: "linkding reports {{ linkding_health.json.version }}"
 
     - name: Read the version file shipped inside the linkding image
       ansible.builtin.command:
@@ -149,13 +147,11 @@
       register: linkding_version_file
       changed_when: false
 
-    - name: Assert the image ships the version the role asks for
+    - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
         that: linkding_version_file.stdout | trim == linkding_defaults.linkding_version | string
-        fail_msg: >-
-          The image ships version {{ linkding_version_file.stdout | trim | default('nothing') }},
-          but the role asks for {{ linkding_defaults.linkding_version }}
-        success_msg: "The deployed image ships version {{ linkding_version_file.stdout | trim }}"
+        fail_msg: "linkding reports {{ linkding_version_file.stdout | trim | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
+        success_msg: "linkding reports {{ linkding_version_file.stdout | trim }}"
 
     - name: Inspect the linkding container
       ansible.builtin.command:

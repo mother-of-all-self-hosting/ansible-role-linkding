@@ -149,10 +149,8 @@
     - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
         that: linkding_health.json.version == linkding_defaults.linkding_version | string
-        fail_msg: >-
-          linkding reports version {{ linkding_health.json.version | default('none') }},
-          but the role asks for {{ linkding_defaults.linkding_version }}
-        success_msg: "linkding reports version {{ linkding_health.json.version }}"
+        fail_msg: "linkding reports {{ linkding_health.json.version | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
+        success_msg: "linkding reports {{ linkding_health.json.version }}"
 
     # A second, independent reading of the same fact. /health is served by the
     # Django application; this file is shipped inside the image that the systemd
@@ -169,13 +167,11 @@
       register: linkding_version_file
       changed_when: false
 
-    - name: Assert the image ships the version the role asks for
+    - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
         that: linkding_version_file.stdout | trim == linkding_defaults.linkding_version | string
-        fail_msg: >-
-          The image ships version {{ linkding_version_file.stdout | trim | default('nothing') }},
-          but the role asks for {{ linkding_defaults.linkding_version }}
-        success_msg: "The deployed image ships version {{ linkding_version_file.stdout | trim }}"
+        fail_msg: "linkding reports {{ linkding_version_file.stdout | trim | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
+        success_msg: "linkding reports {{ linkding_version_file.stdout | trim }}"
 
     - name: Probe the linkding environment and superuser account
       ansible.builtin.command:
