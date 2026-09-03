@@ -438,7 +438,7 @@
           The SQLite database is on the host at {{ linkding_data_mount.Source }}/db.sqlite3
           ({{ linkding_database_file.stat.size | default(0) }} bytes)
 
-    - name: Show linkding verification summary
+    - name: Show the linkding verification summary
       ansible.builtin.debug:
         msg:
           - "linkding systemd: {{ linkding_service.status.ActiveState }}"

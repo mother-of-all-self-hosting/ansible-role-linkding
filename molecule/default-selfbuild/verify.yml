@@ -367,11 +367,11 @@
           (it holds {{ linkding_database.bookmarks | length }} bookmark(s))
         success_msg: "The bookmark written through the API is stored in the linkding database"
 
-    - name: Show linkding verification summary
+    - name: Show the linkding verification summary
       ansible.builtin.debug:
         msg:
           - "linkding systemd: {{ linkding_service.status.ActiveState }}"
-          - "linkding image: {{ linkding_container_image_name }} (built here, no registry digest)"
           - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
+          - "linkding image: {{ linkding_container_image_name }} (built here, no registry digest)"
           - "linkding database: {{ linkding_database.vendor }} at {{ linkding_database.name }}"
           - "linkding bookmarks in the database: {{ linkding_database.bookmarks | length }}"

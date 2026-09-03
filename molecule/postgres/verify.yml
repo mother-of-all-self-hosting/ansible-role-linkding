@@ -472,12 +472,12 @@
           The Postgres socket directory is bind-mounted from
           {{ linkding_socket_mount.Source | default('nowhere') }}
 
-    - name: Show linkding verification summary
+    - name: Show the linkding verification summary
       ansible.builtin.debug:
         msg:
-          - "Postgres systemd: {{ linkding_postgres_service.status.ActiveState }}"
           - "linkding systemd: {{ linkding_service.status.ActiveState }}"
           - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
           - "linkding database: {{ linkding_database.vendor }} '{{ linkding_database.name }}' over socket {{ linkding_database.host }}"
           - "linkding superuser: {{ linkding_superuser_username }} (accounts: {{ linkding_account.usernames | join(', ') }})"
-          - "bookmark rows in Postgres: {{ linkding_postgres_rows.stdout | trim }}"
+          - "linkding bookmark rows in Postgres: {{ linkding_postgres_rows.stdout | trim }}"
+          - "Postgres systemd: {{ linkding_postgres_service.status.ActiveState }}"
