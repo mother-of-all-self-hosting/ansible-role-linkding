@@ -135,12 +135,6 @@
           body {{ linkding_health.json | default('none') }})
         success_msg: "linkding reports a working database connection"
 
-    - name: Assert the running linkding is the version this role installs
-      ansible.builtin.assert:
-        that: linkding_health.json.version == linkding_defaults.linkding_version | string
-        fail_msg: "linkding reports {{ linkding_health.json.version | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
-        success_msg: "linkding reports {{ linkding_health.json.version }}"
-
     # A second, independent reading of the same fact. /health is served by the
     # Django application; this file is shipped inside the image that the systemd
     # unit actually started, so the two together rule out the endpoint being
@@ -158,7 +152,9 @@
 
     - name: Assert the running linkding is the version this role installs
       ansible.builtin.assert:
-        that: linkding_version_file.stdout | trim == linkding_defaults.linkding_version | string
+        that:
+          - linkding_health.json.version == linkding_defaults.linkding_version | string
+          - linkding_version_file.stdout | trim == linkding_defaults.linkding_version | string
         fail_msg: "linkding reports {{ linkding_version_file.stdout | trim | default('none') }}, expected {{ linkding_defaults.linkding_version }}"
         success_msg: "linkding reports {{ linkding_version_file.stdout | trim }}"
 
