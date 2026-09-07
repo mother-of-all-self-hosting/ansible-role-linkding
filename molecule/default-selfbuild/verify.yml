@@ -184,7 +184,7 @@
           - image
           - inspect
           - "{{ linkding_container_image_name }}"
-      register: linkding_image_inspection
+      register: linkding_image_raw
       changed_when: false
 
     # An image that was pulled carries the registry digest it was pulled by. One
@@ -192,10 +192,10 @@
     # rules out the tag above having simply been fetched from somewhere.
     - name: Assert the image was built here rather than pulled
       ansible.builtin.assert:
-        that: (linkding_image_inspection.stdout | from_json)[0].RepoDigests | length == 0
+        that: (linkding_image_raw.stdout | from_json)[0].RepoDigests | length == 0
         fail_msg: >-
           The image '{{ linkding_container_image_name }}' carries registry digests
-          {{ (linkding_image_inspection.stdout | from_json)[0].RepoDigests }},
+          {{ (linkding_image_raw.stdout | from_json)[0].RepoDigests }},
           so it was pulled rather than built here
         success_msg: "The image '{{ linkding_container_image_name }}' carries no registry digest, so it was built here"
 
