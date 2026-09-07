@@ -72,11 +72,9 @@
 
   tasks:
     # The role is not included in this playbook, so its defaults are not in
-    # scope. Reading defaults/main.yml directly keeps the assertions below tied
-    # to the values that Renovate bumps, with nothing to keep in sync in this
-    # scenario. Only literal leaf values are used from it - anything built with
-    # Jinja is unrendered here. include_vars reads from the controller.
-    - name: Load the linkding role defaults
+    # scope. Reading defaults/main.yml directly ties the version assertion
+    # below.
+    - name: Load the role defaults
       ansible.builtin.include_vars:
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: linkding_defaults
