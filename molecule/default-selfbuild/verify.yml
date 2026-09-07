@@ -157,12 +157,12 @@
           - docker
           - inspect
           - "{{ linkding_defaults.linkding_identifier }}"
-      register: linkding_container_inspection
+      register: linkding_container_raw
       changed_when: false
 
     - name: Keep the image the linkding container was created from
       ansible.builtin.set_fact:
-        linkding_container_image_name: "{{ (linkding_container_inspection.stdout | from_json)[0].Config.Image }}"
+        linkding_container_image_name: "{{ (linkding_container_raw.stdout | from_json)[0].Config.Image }}"
 
     # The whole point of this scenario. The role tags a self-built image after
     # the git ref it checked out - `v1.46.2` - whereas the images published on

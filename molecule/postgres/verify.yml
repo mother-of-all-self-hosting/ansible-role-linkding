@@ -451,12 +451,12 @@
           - docker
           - inspect
           - "{{ linkding_defaults.linkding_identifier }}"
-      register: linkding_container_inspection
+      register: linkding_container_raw
       changed_when: false
 
     - name: Keep the Postgres socket bind mount of the linkding container
       ansible.builtin.set_fact:
-        linkding_socket_mount: "{{ (linkding_container_inspection.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', linkding_defaults.linkding_database_socket_path_container) | first | default({}) }}"
+        linkding_socket_mount: "{{ (linkding_container_raw.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', linkding_defaults.linkding_database_socket_path_container) | first | default({}) }}"
 
     - name: Assert the Postgres socket directory is bind-mounted into the container
       ansible.builtin.assert:

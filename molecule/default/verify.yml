@@ -404,12 +404,12 @@
           - docker
           - inspect
           - "{{ linkding_defaults.linkding_identifier }}"
-      register: linkding_container_inspection
+      register: linkding_container_raw
       changed_when: false
 
     - name: Keep the data bind mount of the linkding container
       ansible.builtin.set_fact:
-        linkding_data_mount: "{{ (linkding_container_inspection.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', '/etc/linkding/data') | first | default({}) }}"
+        linkding_data_mount: "{{ (linkding_container_raw.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', '/etc/linkding/data') | first | default({}) }}"
 
     - name: Assert the data directory is bind-mounted from the host
       ansible.builtin.assert:
