@@ -80,35 +80,47 @@
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: linkding_defaults
 
-    - name: Wait for Postgres service to become active (up to 180s)
-      ansible.builtin.systemd:
+    - name: Wait for the Postgres systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
         name: postgres.service
       register: linkding_postgres_service
       until: linkding_postgres_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
-    - name: Assert Postgres service is active
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
+    - name: Assert the Postgres systemd service is active
       ansible.builtin.assert:
         that: linkding_postgres_service.status.ActiveState == 'active'
-        fail_msg: "postgres.service not active ({{ linkding_postgres_service.status.ActiveState }})"
+        fail_msg: "postgres.service is not active ({{ linkding_postgres_service.status.ActiveState }})"
         success_msg: "postgres.service is active"
 
-    - name: Wait for linkding service to become active (up to 180s)
-      ansible.builtin.systemd:
+    - name: Wait for the linkding systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
         name: linkding.service
       register: linkding_service
       until: linkding_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
-    - name: Assert linkding service is active
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
+    - name: Assert the linkding systemd service is active
       ansible.builtin.assert:
         that: linkding_service.status.ActiveState == 'active'
-        fail_msg: "linkding.service not active ({{ linkding_service.status.ActiveState }})"
+        fail_msg: "linkding.service is not active ({{ linkding_service.status.ActiveState }})"
         success_msg: "linkding.service is active"
 
-    - name: Retrieve linkding service log for debugging
+    - name: Retrieve the linkding systemd service log for debugging
       when: linkding_debug_service_enabled | bool
       ansible.builtin.command:
         cmd: journalctl -xeu linkding.service
