@@ -327,10 +327,7 @@
     # bind-mounts a host directory into it, so the mount is checked directly.
     - name: Inspect the linkding container
       ansible.builtin.command:
-        argv:
-          - docker
-          - inspect
-          - "{{ linkding_defaults.linkding_identifier }}"
+        cmd: docker container inspect {{ linkding_defaults.linkding_identifier }}
       register: linkding_container_raw
       changed_when: false
 

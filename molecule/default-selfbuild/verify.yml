@@ -87,10 +87,7 @@
 
     - name: Inspect the linkding container
       ansible.builtin.command:
-        argv:
-          - docker
-          - inspect
-          - "{{ linkding_defaults.linkding_identifier }}"
+        cmd: docker container inspect {{ linkding_defaults.linkding_identifier }}
       register: linkding_container_raw
       changed_when: false
 
@@ -113,11 +110,7 @@
 
     - name: Inspect the self-built linkding image
       ansible.builtin.command:
-        argv:
-          - docker
-          - image
-          - inspect
-          - "{{ linkding_container_image_name }}"
+        cmd: docker image inspect {{ linkding_container_image_name }}
       register: linkding_image_raw
       changed_when: false
 

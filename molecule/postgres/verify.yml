@@ -380,10 +380,7 @@
     # role bind-mounts the socket directory into the container.
     - name: Inspect the linkding container
       ansible.builtin.command:
-        argv:
-          - docker
-          - inspect
-          - "{{ linkding_defaults.linkding_identifier }}"
+        cmd: docker container inspect {{ linkding_defaults.linkding_identifier }}
       register: linkding_container_raw
       changed_when: false
 
