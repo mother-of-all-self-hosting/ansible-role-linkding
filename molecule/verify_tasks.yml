@@ -28,7 +28,7 @@
 - name: Retrieve the linkding systemd service log for debugging
   when: linkding_debug_service_enabled | bool
   ansible.builtin.command:
-    cmd: journalctl -xeu linkding.service
+    cmd: journalctl --no-pager --output=cat --unit=linkding.service
   changed_when: false
 
 # linkding is a Django application, and its login page renders without ever
