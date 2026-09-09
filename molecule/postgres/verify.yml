@@ -74,343 +74,343 @@
   tasks:
     - name: Verify that linkding works
       block:
-    # The role is not included in this playbook, so its defaults are not in
-    # scope. Reading defaults/main.yml directly ties the version assertion
-    # below.
-    - name: Load the role defaults
-      ansible.builtin.include_vars:
-        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-        name: linkding_defaults
+        # The role is not included in this playbook, so its defaults are not in
+        # scope. Reading defaults/main.yml directly ties the version assertion
+        # below.
+        - name: Load the role defaults
+          ansible.builtin.include_vars:
+            file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+            name: linkding_defaults
 
-    - name: Wait for the Postgres systemd service to become active (up to 180s)
-      ansible.builtin.systemd_service:
-        name: postgres.service
-      register: linkding_postgres_service
-      until: linkding_postgres_service.status.ActiveState == 'active'
-      retries: 36
-      delay: 5
-      # So that giving up is reported by the assertion below rather than as a
-      # wall of systemd unit properties.
-      failed_when: false
+        - name: Wait for the Postgres systemd service to become active (up to 180s)
+          ansible.builtin.systemd_service:
+            name: postgres.service
+          register: linkding_postgres_service
+          until: linkding_postgres_service.status.ActiveState == 'active'
+          retries: 36
+          delay: 5
+          # So that giving up is reported by the assertion below rather than as a
+          # wall of systemd unit properties.
+          failed_when: false
 
-    # `Restart=always` in the systemd unit means that even a container which crashes
-    # and gets restarted reads as active here, so this is a precondition rather than
-    # a result.
-    - name: Assert the Postgres systemd service is active
-      ansible.builtin.assert:
-        that: linkding_postgres_service.status.ActiveState == 'active'
-        fail_msg: "postgres.service is not active ({{ linkding_postgres_service.status.ActiveState }})"
-        success_msg: "postgres.service is active"
+        # `Restart=always` in the systemd unit means that even a container which crashes
+        # and gets restarted reads as active here, so this is a precondition rather than
+        # a result.
+        - name: Assert the Postgres systemd service is active
+          ansible.builtin.assert:
+            that: linkding_postgres_service.status.ActiveState == 'active'
+            fail_msg: "postgres.service is not active ({{ linkding_postgres_service.status.ActiveState }})"
+            success_msg: "postgres.service is active"
 
-    - name: Run the checks shared by all linkding scenarios
-      ansible.builtin.include_tasks:
-        file: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/verify_tasks.yml"
+        - name: Run the checks shared by all linkding scenarios
+          ansible.builtin.include_tasks:
+            file: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/verify_tasks.yml"
 
-    - name: Probe the linkding environment and superuser account
-      ansible.builtin.command:
-        argv:
-          - docker
-          - exec
-          - "{{ linkding_defaults.linkding_identifier }}"
-          - python
-          - manage.py
-          - shell
-          - -c
-          - "{{ linkding_verify_account_probe }}"
-      register: linkding_account_output
-      changed_when: false
+        - name: Probe the linkding environment and superuser account
+          ansible.builtin.command:
+            argv:
+              - docker
+              - exec
+              - "{{ linkding_defaults.linkding_identifier }}"
+              - python
+              - manage.py
+              - shell
+              - -c
+              - "{{ linkding_verify_account_probe }}"
+          register: linkding_account_output
+          changed_when: false
 
-    - name: Keep the account probe result
-      ansible.builtin.set_fact:
-        linkding_account: "{{ linkding_account_output.stdout_lines | select('match', '^LINKDING_PROBE=') | first | regex_replace('^LINKDING_PROBE=', '') | from_json }}"
+        - name: Keep the account probe result
+          ansible.builtin.set_fact:
+            linkding_account: "{{ linkding_account_output.stdout_lines | select('match', '^LINKDING_PROBE=') | first | regex_replace('^LINKDING_PROBE=', '') | from_json }}"
 
-    # The environment file the role rendered is only useful if it reached the
-    # process, which a probe of the HTTP surface alone cannot establish. In this
-    # scenario it also carries the Postgres wiring, including the Unix socket
-    # directory the role bind-mounts into the container.
-    - name: Assert the environment file rendered by the role reached the process
-      ansible.builtin.assert:
-        that:
-          - linkding_account.env_superuser_name == linkding_superuser_username
-          - linkding_account.env_superuser_password_set
-          - linkding_account.env_db_engine == linkding_database_type
-          - linkding_account.env_db_host == linkding_defaults.linkding_database_socket_path_container
-          - linkding_account.env_tz == linkding_defaults.linkding_environment_variables_tz
-        fail_msg: >-
-          The linkding process is not running with the environment the role rendered
-          (database engine {{ linkding_account.env_db_engine | default('none') }},
-          database host {{ linkding_account.env_db_host | default('none') }})
-        success_msg: "The environment file rendered by the role reached the linkding process"
+        # The environment file the role rendered is only useful if it reached the
+        # process, which a probe of the HTTP surface alone cannot establish. In this
+        # scenario it also carries the Postgres wiring, including the Unix socket
+        # directory the role bind-mounts into the container.
+        - name: Assert the environment file rendered by the role reached the process
+          ansible.builtin.assert:
+            that:
+              - linkding_account.env_superuser_name == linkding_superuser_username
+              - linkding_account.env_superuser_password_set
+              - linkding_account.env_db_engine == linkding_database_type
+              - linkding_account.env_db_host == linkding_defaults.linkding_database_socket_path_container
+              - linkding_account.env_tz == linkding_defaults.linkding_environment_variables_tz
+            fail_msg: >-
+              The linkding process is not running with the environment the role rendered
+              (database engine {{ linkding_account.env_db_engine | default('none') }},
+              database host {{ linkding_account.env_db_host | default('none') }})
+            success_msg: "The environment file rendered by the role reached the linkding process"
 
-    - name: Assert the superuser the role asked for exists
-      ansible.builtin.assert:
-        that:
-          - linkding_superuser_username in linkding_account.usernames
-          - linkding_account.is_superuser | bool
-          - linkding_account.is_staff | bool
-          - linkding_account.usable_password | bool
-        fail_msg: >-
-          linkding did not create the superuser '{{ linkding_superuser_username }}'
-          (accounts present: {{ linkding_account.usernames | join(', ') | default('none') }})
-        success_msg: "linkding created the superuser '{{ linkding_superuser_username }}'"
+        - name: Assert the superuser the role asked for exists
+          ansible.builtin.assert:
+            that:
+              - linkding_superuser_username in linkding_account.usernames
+              - linkding_account.is_superuser | bool
+              - linkding_account.is_staff | bool
+              - linkding_account.usable_password | bool
+            fail_msg: >-
+              linkding did not create the superuser '{{ linkding_superuser_username }}'
+              (accounts present: {{ linkding_account.usernames | join(', ') | default('none') }})
+            success_msg: "linkding created the superuser '{{ linkding_superuser_username }}'"
 
-    # Regression test for a bug this role used to ship: the superuser settings
-    # defaulted to a bare YAML key, which is null, and env.j2 emitted them
-    # unconditionally, so Jinja rendered LD_SUPERUSER_NAME=None and linkding
-    # dutifully created a working admin account named `None` on every
-    # installation that configured no superuser.
-    - name: Assert no account was created from a stringified empty setting
-      ansible.builtin.assert:
-        that: "'None' not in linkding_account.usernames"
-        fail_msg: >-
-          linkding has an account named 'None', which means an unset superuser setting
-          was rendered into the environment file as the string None
-        success_msg: "linkding has no account named 'None'"
+        # Regression test for a bug this role used to ship: the superuser settings
+        # defaulted to a bare YAML key, which is null, and env.j2 emitted them
+        # unconditionally, so Jinja rendered LD_SUPERUSER_NAME=None and linkding
+        # dutifully created a working admin account named `None` on every
+        # installation that configured no superuser.
+        - name: Assert no account was created from a stringified empty setting
+          ansible.builtin.assert:
+            that: "'None' not in linkding_account.usernames"
+            fail_msg: >-
+              linkding has an account named 'None', which means an unset superuser setting
+              was rendered into the environment file as the string None
+            success_msg: "linkding has no account named 'None'"
 
-    - name: Fetch the linkding login page
-      ansible.builtin.uri:
-        url: "{{ linkding_verify_base_url }}/login/"
-        method: GET
-        status_code: [200]
-        return_content: true
-      register: linkding_login_page
+        - name: Fetch the linkding login page
+          ansible.builtin.uri:
+            url: "{{ linkding_verify_base_url }}/login/"
+            method: GET
+            status_code: [200]
+            return_content: true
+          register: linkding_login_page
 
-    # Django protects the login form with a CSRF token that has to be sent back
-    # together with the cookie it was issued against.
-    - name: Keep the login page CSRF token and cookies
-      ansible.builtin.set_fact:
-        linkding_verify_csrf_token: "{{ linkding_login_page.content | regex_search('name=\"csrfmiddlewaretoken\" value=\"([^\"]+)\"', '\\1') | first }}"
-        linkding_verify_cookies: "{{ linkding_login_page.cookies_string }}"
+        # Django protects the login form with a CSRF token that has to be sent back
+        # together with the cookie it was issued against.
+        - name: Keep the login page CSRF token and cookies
+          ansible.builtin.set_fact:
+            linkding_verify_csrf_token: "{{ linkding_login_page.content | regex_search('name=\"csrfmiddlewaretoken\" value=\"([^\"]+)\"', '\\1') | first }}"
+            linkding_verify_cookies: "{{ linkding_login_page.cookies_string }}"
 
-    - name: Assert the login page issued a CSRF token
-      ansible.builtin.assert:
-        that:
-          - linkding_verify_csrf_token | length > 0
-          - linkding_verify_cookies | length > 0
-        fail_msg: "The linkding login page did not issue a CSRF token"
-        success_msg: "The linkding login page issued a CSRF token"
+        - name: Assert the login page issued a CSRF token
+          ansible.builtin.assert:
+            that:
+              - linkding_verify_csrf_token | length > 0
+              - linkding_verify_cookies | length > 0
+            fail_msg: "The linkding login page did not issue a CSRF token"
+            success_msg: "The linkding login page issued a CSRF token"
 
-    # Authenticating reads the account out of Postgres, so a working login is
-    # also a read path through the database this scenario is about.
-    - name: Log in to linkding with the configured superuser credentials
-      ansible.builtin.uri:
-        url: "{{ linkding_verify_base_url }}/login/"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          csrfmiddlewaretoken: "{{ linkding_verify_csrf_token }}"
-          username: "{{ linkding_superuser_username }}"
-          password: "{{ linkding_superuser_password }}"
-        headers:
-          Cookie: "{{ linkding_verify_cookies }}"
-        status_code: [200, 302, 401, 403]
-        follow_redirects: none
-      register: linkding_login
-      no_log: true  # carries the superuser password in the request body
+        # Authenticating reads the account out of Postgres, so a working login is
+        # also a read path through the database this scenario is about.
+        - name: Log in to linkding with the configured superuser credentials
+          ansible.builtin.uri:
+            url: "{{ linkding_verify_base_url }}/login/"
+            method: POST
+            body_format: form-urlencoded
+            body:
+              csrfmiddlewaretoken: "{{ linkding_verify_csrf_token }}"
+              username: "{{ linkding_superuser_username }}"
+              password: "{{ linkding_superuser_password }}"
+            headers:
+              Cookie: "{{ linkding_verify_cookies }}"
+            status_code: [200, 302, 401, 403]
+            follow_redirects: none
+          register: linkding_login
+          no_log: true  # carries the superuser password in the request body
 
-    # Redirects are deliberately not followed. The uri module only reports
-    # cookies for a 2xx response, so the session cookie set alongside this 302
-    # is not visible here anyway, and following the redirect would re-send the
-    # static Cookie header above instead of the new session - landing back on
-    # the login page and making a successful login look like a failed one.
-    # What separates the two cases is the answer itself: linkding redirects an
-    # accepted login to /bookmarks and answers a rejected one with a 401.
-    - name: Assert the superuser credentials authenticate
-      ansible.builtin.assert:
-        that:
-          - linkding_login.status == 302
-          - "'/bookmarks' in linkding_login.location"
-        fail_msg: >-
-          Logging in to linkding as '{{ linkding_superuser_username }}' failed
-          (status {{ linkding_login.status | default('no response') }},
-          sent to {{ linkding_login.location | default('nowhere') }})
-        success_msg: "The configured superuser credentials authenticate against linkding"
+        # Redirects are deliberately not followed. The uri module only reports
+        # cookies for a 2xx response, so the session cookie set alongside this 302
+        # is not visible here anyway, and following the redirect would re-send the
+        # static Cookie header above instead of the new session - landing back on
+        # the login page and making a successful login look like a failed one.
+        # What separates the two cases is the answer itself: linkding redirects an
+        # accepted login to /bookmarks and answers a rejected one with a 401.
+        - name: Assert the superuser credentials authenticate
+          ansible.builtin.assert:
+            that:
+              - linkding_login.status == 302
+              - "'/bookmarks' in linkding_login.location"
+            fail_msg: >-
+              Logging in to linkding as '{{ linkding_superuser_username }}' failed
+              (status {{ linkding_login.status | default('no response') }},
+              sent to {{ linkding_login.location | default('nowhere') }})
+            success_msg: "The configured superuser credentials authenticate against linkding"
 
-    # The control for the login above. Without it, a linkding that accepted any
-    # credentials at all would pass this scenario just as happily.
-    - name: Attempt a login with a deliberately wrong password
-      ansible.builtin.uri:
-        url: "{{ linkding_verify_base_url }}/login/"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          csrfmiddlewaretoken: "{{ linkding_verify_csrf_token }}"
-          username: "{{ linkding_superuser_username }}"
-          password: "not-the-{{ linkding_superuser_password }}"
-        headers:
-          Cookie: "{{ linkding_verify_cookies }}"
-        status_code: [200, 302, 401, 403]
-        follow_redirects: none
-      register: linkding_login_rejected
-      no_log: true  # carries a variation of the superuser password
+        # The control for the login above. Without it, a linkding that accepted any
+        # credentials at all would pass this scenario just as happily.
+        - name: Attempt a login with a deliberately wrong password
+          ansible.builtin.uri:
+            url: "{{ linkding_verify_base_url }}/login/"
+            method: POST
+            body_format: form-urlencoded
+            body:
+              csrfmiddlewaretoken: "{{ linkding_verify_csrf_token }}"
+              username: "{{ linkding_superuser_username }}"
+              password: "not-the-{{ linkding_superuser_password }}"
+            headers:
+              Cookie: "{{ linkding_verify_cookies }}"
+            status_code: [200, 302, 401, 403]
+            follow_redirects: none
+          register: linkding_login_rejected
+          no_log: true  # carries a variation of the superuser password
 
-    - name: Assert wrong credentials are rejected
-      ansible.builtin.assert:
-        that:
-          - linkding_login_rejected.status == 401
-          - "'/bookmarks' not in (linkding_login_rejected.location | default(''))"
-        fail_msg: >-
-          linkding did not reject a wrong password
-          (status {{ linkding_login_rejected.status | default('no response') }})
-        success_msg: "linkding rejects wrong credentials"
+        - name: Assert wrong credentials are rejected
+          ansible.builtin.assert:
+            that:
+              - linkding_login_rejected.status == 401
+              - "'/bookmarks' not in (linkding_login_rejected.location | default(''))"
+            fail_msg: >-
+              linkding did not reject a wrong password
+              (status {{ linkding_login_rejected.status | default('no response') }})
+            success_msg: "linkding rejects wrong credentials"
 
-    # The functional probe. linkding's REST API is authenticated with a token
-    # bound to a real account, so this exercises the account, the API and
-    # Postgres over the Unix socket in one go.
-    - name: Create a bookmark through the linkding API
-      ansible.builtin.uri:
-        url: "{{ linkding_verify_base_url }}/api/bookmarks/"
-        method: POST
-        headers:
-          Authorization: "Token {{ linkding_account.token }}"
-        body_format: json
-        body:
-          url: "{{ linkding_verify_bookmark_url }}"
-          title: "{{ linkding_verify_bookmark_title }}"
-          description: Written through the linkding API by the Molecule verifier
-          tag_names:
-            - molecule
-        status_code: [201, 400, 401, 403]
-        return_content: true
-      register: linkding_bookmark_created
-      changed_when: linkding_bookmark_created.status == 201
+        # The functional probe. linkding's REST API is authenticated with a token
+        # bound to a real account, so this exercises the account, the API and
+        # Postgres over the Unix socket in one go.
+        - name: Create a bookmark through the linkding API
+          ansible.builtin.uri:
+            url: "{{ linkding_verify_base_url }}/api/bookmarks/"
+            method: POST
+            headers:
+              Authorization: "Token {{ linkding_account.token }}"
+            body_format: json
+            body:
+              url: "{{ linkding_verify_bookmark_url }}"
+              title: "{{ linkding_verify_bookmark_title }}"
+              description: Written through the linkding API by the Molecule verifier
+              tag_names:
+                - molecule
+            status_code: [201, 400, 401, 403]
+            return_content: true
+          register: linkding_bookmark_created
+          changed_when: linkding_bookmark_created.status == 201
 
-    - name: Assert the API accepted the bookmark
-      ansible.builtin.assert:
-        that:
-          - linkding_bookmark_created.status == 201
-          - linkding_bookmark_created.json.id | int > 0
-          - linkding_bookmark_created.json.url == linkding_verify_bookmark_url
-        fail_msg: >-
-          linkding did not accept the bookmark
-          (status {{ linkding_bookmark_created.status | default('no response') }})
-        success_msg: "linkding accepted the bookmark {{ linkding_bookmark_created.json.id | default('none') }}"
+        - name: Assert the API accepted the bookmark
+          ansible.builtin.assert:
+            that:
+              - linkding_bookmark_created.status == 201
+              - linkding_bookmark_created.json.id | int > 0
+              - linkding_bookmark_created.json.url == linkding_verify_bookmark_url
+            fail_msg: >-
+              linkding did not accept the bookmark
+              (status {{ linkding_bookmark_created.status | default('no response') }})
+            success_msg: "linkding accepted the bookmark {{ linkding_bookmark_created.json.id | default('none') }}"
 
-    # Reading the bookmark back through a different endpoint than the one that
-    # created it covers the storage round trip in both directions.
-    - name: List the bookmarks through the linkding API
-      ansible.builtin.uri:
-        url: "{{ linkding_verify_base_url }}/api/bookmarks/"
-        method: GET
-        headers:
-          Authorization: "Token {{ linkding_account.token }}"
-        status_code: [200, 401, 403]
-        return_content: true
-      register: linkding_bookmarks
+        # Reading the bookmark back through a different endpoint than the one that
+        # created it covers the storage round trip in both directions.
+        - name: List the bookmarks through the linkding API
+          ansible.builtin.uri:
+            url: "{{ linkding_verify_base_url }}/api/bookmarks/"
+            method: GET
+            headers:
+              Authorization: "Token {{ linkding_account.token }}"
+            status_code: [200, 401, 403]
+            return_content: true
+          register: linkding_bookmarks
 
-    - name: Assert the bookmark is listed
-      ansible.builtin.assert:
-        that:
-          - linkding_bookmarks.status == 200
-          - linkding_bookmark_created.json.id in (linkding_bookmarks.json.results | map(attribute='id') | list)
-          - linkding_verify_bookmark_url in (linkding_bookmarks.json.results | map(attribute='url') | list)
-        fail_msg: "The created bookmark was not returned by the linkding bookmark listing"
-        success_msg: "The created bookmark was read back through the linkding API"
+        - name: Assert the bookmark is listed
+          ansible.builtin.assert:
+            that:
+              - linkding_bookmarks.status == 200
+              - linkding_bookmark_created.json.id in (linkding_bookmarks.json.results | map(attribute='id') | list)
+              - linkding_verify_bookmark_url in (linkding_bookmarks.json.results | map(attribute='url') | list)
+            fail_msg: "The created bookmark was not returned by the linkding bookmark listing"
+            success_msg: "The created bookmark was read back through the linkding API"
 
-    - name: Probe the linkding database
-      ansible.builtin.command:
-        argv:
-          - docker
-          - exec
-          - "{{ linkding_defaults.linkding_identifier }}"
-          - python
-          - manage.py
-          - shell
-          - -c
-          - "{{ linkding_verify_database_probe }}"
-      register: linkding_database_output
-      changed_when: false
+        - name: Probe the linkding database
+          ansible.builtin.command:
+            argv:
+              - docker
+              - exec
+              - "{{ linkding_defaults.linkding_identifier }}"
+              - python
+              - manage.py
+              - shell
+              - -c
+              - "{{ linkding_verify_database_probe }}"
+          register: linkding_database_output
+          changed_when: false
 
-    - name: Keep the database probe result
-      ansible.builtin.set_fact:
-        linkding_database: "{{ linkding_database_output.stdout_lines | select('match', '^LINKDING_PROBE=') | first | regex_replace('^LINKDING_PROBE=', '') | from_json }}"
+        - name: Keep the database probe result
+          ansible.builtin.set_fact:
+            linkding_database: "{{ linkding_database_output.stdout_lines | select('match', '^LINKDING_PROBE=') | first | regex_replace('^LINKDING_PROBE=', '') | from_json }}"
 
-    # A scenario named after a backend is no proof that the application ended up
-    # using it. linkding falls back to SQLite whenever LD_DB_ENGINE does not say
-    # otherwise, which is exactly the failure this scenario has to be able to
-    # see, so the backend is read off the connection Django actually opened.
-    - name: Assert linkding is running on Postgres
-      ansible.builtin.assert:
-        that:
-          - linkding_database.vendor == 'postgresql'
-          - "'postgresql' in linkding_database.engine"
-          - linkding_database.name == linkding_database_name
-          - linkding_database.host == linkding_defaults.linkding_database_socket_path_container
-        fail_msg: >-
-          linkding is running on the {{ linkding_database.vendor | default('unknown') }} backend
-          ({{ linkding_database.engine | default('unknown') }}) at
-          host '{{ linkding_database.host | default('none') }}', not on Postgres over the Unix socket
-        success_msg: >-
-          linkding is running on Postgres, database '{{ linkding_database.name }}'
-          over the Unix socket at '{{ linkding_database.host }}'
+        # A scenario named after a backend is no proof that the application ended up
+        # using it. linkding falls back to SQLite whenever LD_DB_ENGINE does not say
+        # otherwise, which is exactly the failure this scenario has to be able to
+        # see, so the backend is read off the connection Django actually opened.
+        - name: Assert linkding is running on Postgres
+          ansible.builtin.assert:
+            that:
+              - linkding_database.vendor == 'postgresql'
+              - "'postgresql' in linkding_database.engine"
+              - linkding_database.name == linkding_database_name
+              - linkding_database.host == linkding_defaults.linkding_database_socket_path_container
+            fail_msg: >-
+              linkding is running on the {{ linkding_database.vendor | default('unknown') }} backend
+              ({{ linkding_database.engine | default('unknown') }}) at
+              host '{{ linkding_database.host | default('none') }}', not on Postgres over the Unix socket
+            success_msg: >-
+              linkding is running on Postgres, database '{{ linkding_database.name }}'
+              over the Unix socket at '{{ linkding_database.host }}'
 
-    - name: Assert the bookmark was persisted into the database
-      ansible.builtin.assert:
-        that: linkding_verify_bookmark_url in (linkding_database.bookmarks | map(attribute=0) | list)
-        fail_msg: >-
-          The linkding database holds no bookmark for {{ linkding_verify_bookmark_url }}
-          (it holds {{ linkding_database.bookmarks | length }} bookmark(s))
-        success_msg: "The bookmark written through the API is stored in the linkding database"
+        - name: Assert the bookmark was persisted into the database
+          ansible.builtin.assert:
+            that: linkding_verify_bookmark_url in (linkding_database.bookmarks | map(attribute=0) | list)
+            fail_msg: >-
+              The linkding database holds no bookmark for {{ linkding_verify_bookmark_url }}
+              (it holds {{ linkding_database.bookmarks | length }} bookmark(s))
+            success_msg: "The bookmark written through the API is stored in the linkding database"
 
-    # The strongest reading of all: the row is looked for from the Postgres side,
-    # by a client that knows nothing about linkding. The docker CLI is invoked
-    # directly, because the lint environment used in CI has no collections
-    # beyond ansible-core available.
-    - name: Count the bookmark rows in the Postgres database
-      ansible.builtin.command:
-        cmd: >-
-          docker exec -e PGPASSWORD={{ linkding_database_password | quote }}
-          {{ postgres_identifier | default('postgres') }}
-          psql -U {{ linkding_database_username | quote }} -d {{ linkding_database_name | quote }}
-          -tAc "SELECT count(*) FROM bookmarks_bookmark WHERE url = '{{ linkding_verify_bookmark_url }}'"
-      register: linkding_postgres_rows
-      changed_when: false
+        # The strongest reading of all: the row is looked for from the Postgres side,
+        # by a client that knows nothing about linkding. The docker CLI is invoked
+        # directly, because the lint environment used in CI has no collections
+        # beyond ansible-core available.
+        - name: Count the bookmark rows in the Postgres database
+          ansible.builtin.command:
+            cmd: >-
+              docker exec -e PGPASSWORD={{ linkding_database_password | quote }}
+              {{ postgres_identifier | default('postgres') }}
+              psql -U {{ linkding_database_username | quote }} -d {{ linkding_database_name | quote }}
+              -tAc "SELECT count(*) FROM bookmarks_bookmark WHERE url = '{{ linkding_verify_bookmark_url }}'"
+          register: linkding_postgres_rows
+          changed_when: false
 
-    - name: Assert Postgres itself holds the bookmark
-      ansible.builtin.assert:
-        that: linkding_postgres_rows.stdout | trim | int == 1
-        fail_msg: >-
-          The Postgres database '{{ linkding_database_name }}' holds
-          {{ linkding_postgres_rows.stdout | trim | default('no') }} row(s) for
-          {{ linkding_verify_bookmark_url }} - linkding is not storing bookmarks in it
-          ({{ linkding_postgres_rows.stderr | default('no error output') | trim }})
-        success_msg: >-
-          The Postgres database '{{ linkding_database_name }}' holds the bookmark
-          that was written through the linkding API
+        - name: Assert Postgres itself holds the bookmark
+          ansible.builtin.assert:
+            that: linkding_postgres_rows.stdout | trim | int == 1
+            fail_msg: >-
+              The Postgres database '{{ linkding_database_name }}' holds
+              {{ linkding_postgres_rows.stdout | trim | default('no') }} row(s) for
+              {{ linkding_verify_bookmark_url }} - linkding is not storing bookmarks in it
+              ({{ linkding_postgres_rows.stderr | default('no error output') | trim }})
+            success_msg: >-
+              The Postgres database '{{ linkding_database_name }}' holds the bookmark
+              that was written through the linkding API
 
-    # linkding reaches Postgres over a Unix socket, which only works because the
-    # role bind-mounts the socket directory into the container.
-    - name: Inspect the linkding container
-      ansible.builtin.command:
-        cmd: docker container inspect {{ linkding_defaults.linkding_identifier }}
-      register: linkding_container_raw
-      changed_when: false
+        # linkding reaches Postgres over a Unix socket, which only works because the
+        # role bind-mounts the socket directory into the container.
+        - name: Inspect the linkding container
+          ansible.builtin.command:
+            cmd: docker container inspect {{ linkding_defaults.linkding_identifier }}
+          register: linkding_container_raw
+          changed_when: false
 
-    - name: Keep the Postgres socket bind mount of the linkding container
-      ansible.builtin.set_fact:
-        linkding_socket_mount: "{{ (linkding_container_raw.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', linkding_defaults.linkding_database_socket_path_container) | first | default({}) }}"
+        - name: Keep the Postgres socket bind mount of the linkding container
+          ansible.builtin.set_fact:
+            linkding_socket_mount: "{{ (linkding_container_raw.stdout | from_json)[0].Mounts | selectattr('Destination', 'equalto', linkding_defaults.linkding_database_socket_path_container) | first | default({}) }}"
 
-    - name: Assert the Postgres socket directory is bind-mounted into the container
-      ansible.builtin.assert:
-        that:
-          - linkding_socket_mount.Type | default('') == 'bind'
-          - linkding_socket_mount.Source | default('') | length > 0
-        fail_msg: >-
-          The linkding container has no host bind mount at
-          {{ linkding_defaults.linkding_database_socket_path_container }}
-        success_msg: >-
-          The Postgres socket directory is bind-mounted from
-          {{ linkding_socket_mount.Source | default('nowhere') }}
+        - name: Assert the Postgres socket directory is bind-mounted into the container
+          ansible.builtin.assert:
+            that:
+              - linkding_socket_mount.Type | default('') == 'bind'
+              - linkding_socket_mount.Source | default('') | length > 0
+            fail_msg: >-
+              The linkding container has no host bind mount at
+              {{ linkding_defaults.linkding_database_socket_path_container }}
+            success_msg: >-
+              The Postgres socket directory is bind-mounted from
+              {{ linkding_socket_mount.Source | default('nowhere') }}
 
-    - name: Show the linkding verification summary
-      ansible.builtin.debug:
-        msg:
-          - "linkding systemd: {{ linkding_service.status.ActiveState }}"
-          - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
-          - "linkding database: {{ linkding_database.vendor }} '{{ linkding_database.name }}' over socket {{ linkding_database.host }}"
-          - "linkding superuser: {{ linkding_superuser_username }} (accounts: {{ linkding_account.usernames | join(', ') }})"
-          - "linkding bookmark rows in Postgres: {{ linkding_postgres_rows.stdout | trim }}"
-          - "Postgres systemd: {{ linkding_postgres_service.status.ActiveState }}"
+        - name: Show the linkding verification summary
+          ansible.builtin.debug:
+            msg:
+              - "linkding systemd: {{ linkding_service.status.ActiveState }}"
+              - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
+              - "linkding database: {{ linkding_database.vendor }} '{{ linkding_database.name }}' over socket {{ linkding_database.host }}"
+              - "linkding superuser: {{ linkding_superuser_username }} (accounts: {{ linkding_account.usernames | join(', ') }})"
+              - "linkding bookmark rows in Postgres: {{ linkding_postgres_rows.stdout | trim }}"
+              - "Postgres systemd: {{ linkding_postgres_service.status.ActiveState }}"
 
       rescue:
         # Whatever went wrong, the reason is almost always in the systemd service log.
