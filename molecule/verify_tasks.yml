@@ -5,13 +5,22 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Wait for the linkding systemd service to become active (up to 180s)
+# The role is not included in this playbook, so its defaults are not in
+# scope. Reading defaults/main.yml directly ties the version assertion
+# below.
+- name: Load the role defaults
+  ansible.builtin.include_vars:
+    file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+    name: linkding_defaults
+
+- name: Wait for the linkding systemd services to become active (up to 180s each)
   ansible.builtin.systemd_service:
-    name: linkding.service
-  register: linkding_service
-  until: linkding_service.status.ActiveState == 'active'
+    name: "{{ item }}"
+  register: linkding_services
+  until: linkding_services.status.ActiveState == 'active'
   retries: 36
   delay: 5
+  loop: "{{ linkding_verify_units }}"
   # So that giving up is reported by the assertion below rather than as a
   # wall of systemd unit properties.
   failed_when: false
@@ -19,17 +28,20 @@
 # `Restart=always` in the systemd unit means that even a container which crashes
 # and gets restarted reads as active here, so this is a precondition rather than
 # a result.
-- name: Assert the linkding systemd service is active
+- name: Assert the linkding systemd services are active
   ansible.builtin.assert:
-    that: linkding_service.status.ActiveState == 'active'
-    fail_msg: "linkding.service is not active ({{ linkding_service.status.ActiveState }})"
-    success_msg: "linkding.service is active"
+    that: linkding_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+    fail_msg: >-
+      Not every service is active:
+      {{ dict(linkding_verify_units | zip(linkding_services.results | map(attribute='status.ActiveState'))) }}
+    success_msg: "Every systemd service is active"
 
-- name: Retrieve the linkding systemd service log for debugging
+- name: Retrieve the linkding systemd services log for debugging
   when: linkding_debug_service_enabled | bool
   ansible.builtin.command:
-    cmd: journalctl --no-pager --output=cat --unit=linkding.service
+    cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
   changed_when: false
+  loop: "{{ linkding_verify_units }}"
 
 # linkding is a Django application, and its login page renders without ever
 # touching the database: a container whose database is unreachable still

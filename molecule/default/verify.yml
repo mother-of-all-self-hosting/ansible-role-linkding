@@ -70,17 +70,12 @@
           "bookmarks": [list(row) for row in cursor.fetchall()],
       }))
 
+    linkding_verify_units:
+      - linkding.service
+
   tasks:
     - name: Verify that linkding works
       block:
-        # The role is not included in this playbook, so its defaults are not in
-        # scope. Reading defaults/main.yml directly ties the version assertion
-        # below.
-        - name: Load the role defaults
-          ansible.builtin.include_vars:
-            file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-            name: linkding_defaults
-
         - name: Run the checks shared by all linkding scenarios
           ansible.builtin.include_tasks:
             file: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/verify_tasks.yml"
@@ -365,7 +360,7 @@
         - name: Show the linkding verification summary
           ansible.builtin.debug:
             msg:
-              - "linkding systemd: {{ linkding_service.status.ActiveState }}"
+              - "linkding systemd: {% for unit, state in linkding_verify_units | zip(linkding_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
               - "linkding database: {{ linkding_database.vendor }} at {{ linkding_database.name }}"
               - "linkding superuser: {{ linkding_superuser_username }} (accounts: {{ linkding_account.usernames | join(', ') }})"

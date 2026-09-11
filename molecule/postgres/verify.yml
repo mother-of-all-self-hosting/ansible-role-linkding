@@ -71,37 +71,13 @@
           "bookmarks": [list(row) for row in cursor.fetchall()],
       }))
 
+    linkding_verify_units:
+      - linkding.service
+      - postgres.service
+
   tasks:
     - name: Verify that linkding works
       block:
-        # The role is not included in this playbook, so its defaults are not in
-        # scope. Reading defaults/main.yml directly ties the version assertion
-        # below.
-        - name: Load the role defaults
-          ansible.builtin.include_vars:
-            file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-            name: linkding_defaults
-
-        - name: Wait for the Postgres systemd service to become active (up to 180s)
-          ansible.builtin.systemd_service:
-            name: postgres.service
-          register: linkding_postgres_service
-          until: linkding_postgres_service.status.ActiveState == 'active'
-          retries: 36
-          delay: 5
-          # So that giving up is reported by the assertion below rather than as a
-          # wall of systemd unit properties.
-          failed_when: false
-
-        # `Restart=always` in the systemd unit means that even a container which crashes
-        # and gets restarted reads as active here, so this is a precondition rather than
-        # a result.
-        - name: Assert the Postgres systemd service is active
-          ansible.builtin.assert:
-            that: linkding_postgres_service.status.ActiveState == 'active'
-            fail_msg: "postgres.service is not active ({{ linkding_postgres_service.status.ActiveState }})"
-            success_msg: "postgres.service is active"
-
         - name: Run the checks shared by all linkding scenarios
           ansible.builtin.include_tasks:
             file: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/verify_tasks.yml"
@@ -405,12 +381,11 @@
         - name: Show the linkding verification summary
           ansible.builtin.debug:
             msg:
-              - "linkding systemd: {{ linkding_service.status.ActiveState }}"
+              - "linkding systemd: {% for unit, state in linkding_verify_units | zip(linkding_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "linkding version: {{ linkding_health.json.version }} (image ships {{ linkding_version_file.stdout | trim }})"
               - "linkding database: {{ linkding_database.vendor }} '{{ linkding_database.name }}' over socket {{ linkding_database.host }}"
               - "linkding superuser: {{ linkding_superuser_username }} (accounts: {{ linkding_account.usernames | join(', ') }})"
               - "linkding bookmark rows in Postgres: {{ linkding_postgres_rows.stdout | trim }}"
-              - "Postgres systemd: {{ linkding_postgres_service.status.ActiveState }}"
 
       rescue:
         # Whatever went wrong, the reason is almost always in the systemd service log.
